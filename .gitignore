@@ -1,0 +1,18 @@
+# Backend Virtual Environment
+HOSPBACKEND/myenv/
+
+# Frontend Virtual Environment
+HOSPFRONTEND/myvir/
+
+# Python Cache
+**/__pycache__/
+*.pyc
+
+# Environment Variables
+**/.env
+
+# VS Code
+.vscode/
+
+# Django Media
+HOSPBACKEND/media/
