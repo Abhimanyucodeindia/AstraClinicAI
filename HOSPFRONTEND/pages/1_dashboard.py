@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from api import BASE_URL
+from doctor_utils import resolve_doctor_photo, get_department_name
 
 st.set_page_config(
     page_title="AstraClinicAI — Dashboard",
@@ -8,6 +9,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
 
 # =========================================================
 # STYLES
@@ -72,9 +74,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     border: 1.5px solid rgba(0, 255, 220, 0.2) !important;
     border-radius: 18px;
     padding: 1.4rem 1.2rem 1.2rem 1.2rem;
+    overflow: hidden;
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     box-shadow: 0 0 12px rgba(0, 255, 220, 0.05);
-    min-height: 420px;
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"]:hover {
@@ -86,25 +88,27 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover {
         inset 0 0 25px rgba(0, 255, 220, 0.05);
 }
 
+/* Pulls the photo out past the card's own padding so it fills the
+   frame edge-to-edge, while the name/dept/button below keep normal padding. */
 .doctor-photo-wrap {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
+    margin: -1.4rem -1.2rem 1rem -1.2rem;
+    width: calc(100% + 2.4rem);
 }
 
 .doctor-photo {
-    width: 140px;
-    height: 175px;
+    width: 100%;
+    height: 260px;
     object-fit: cover;
-    border-radius: 10px;
-    border: 2px solid rgba(0, 255, 220, 0.5);
-    box-shadow: 0 0 18px rgba(0, 255, 220, 0.25), 0 0 30px rgba(170, 0, 255, 0.15);
+    display: block;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 2px solid rgba(0, 255, 220, 0.5);
+    box-shadow: 0 4px 24px rgba(0, 255, 220, 0.2);
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"] h3 {
     font-size: 1.35rem !important;
     text-align: center;
-    margin-top: 0.2rem;
+    margin-top: 0.6rem;
 }
 
 .doctor-dept {
@@ -199,15 +203,7 @@ for index, doctor in enumerate(doctors):
 
         with st.container(border=True):
 
-            photo_url = doctor.get("photo_url") or doctor.get("image_url")
-            if not photo_url:
-                initials = "".join(
-                    part[0].upper() for part in doctor["doctor_name"].split()[:2]
-                )
-                photo_url = (
-                    f"https://ui-avatars.com/api/?name={initials}"
-                    "&size=256&background=0a0c10&color=00ffdc&bold=true&font-size=0.4"
-                )
+            photo_url = resolve_doctor_photo(doctor)
 
             st.markdown(
                 f"<div class='doctor-photo-wrap'>"
@@ -219,7 +215,7 @@ for index, doctor in enumerate(doctors):
             st.subheader(doctor["doctor_name"])
 
             st.markdown(
-                f"<div class='doctor-dept'>{doctor['department']}</div>",
+                f"<div class='doctor-dept'>{get_department_name(doctor)}</div>",
                 unsafe_allow_html=True,
             )
 
@@ -246,6 +242,7 @@ for index, doctor in enumerate(doctors):
 
                     st.session_state["consultation_id"] = consultation["consultation_id"]
                     st.session_state["doctor_name"] = doctor["doctor_name"]
+                    st.session_state["doctor_photo"] = photo_url
 
                     st.switch_page("pages/2_consultation.py")
                 except requests.RequestException:

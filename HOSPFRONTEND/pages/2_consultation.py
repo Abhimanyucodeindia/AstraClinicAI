@@ -54,13 +54,23 @@ h1 {
 .chat-topbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.9rem;
     background: rgba(10, 12, 16, 0.7);
     border: 1px solid rgba(0, 255, 220, 0.2);
     border-radius: 14px;
-    padding: 0.8rem 1.2rem;
+    padding: 0.7rem 1.2rem;
     margin-bottom: 1.4rem;
     box-shadow: 0 0 16px rgba(0, 255, 220, 0.06);
+}
+
+.doctor-avatar-small {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(0, 255, 220, 0.5);
+    box-shadow: 0 0 10px rgba(0, 255, 220, 0.3);
+    flex-shrink: 0;
 }
 
 .doctor-tag {
@@ -198,11 +208,19 @@ st.title("💬 Consultation")
 top_col1, top_col2, top_col3 = st.columns([6, 2, 2])
 
 with top_col1:
+    doctor_avatar = st.session_state.get("doctor_photo", "🤖")
+    avatar_html = (
+        f"<img class='doctor-avatar-small' src='{doctor_avatar}' />"
+        if doctor_avatar.startswith("data:") or doctor_avatar.startswith("http")
+        else f"<div style='font-size:1.8rem;'>{doctor_avatar}</div>"
+    )
+
     st.markdown(
         f"""
         <div class="chat-topbar">
+            {avatar_html}
             <div>
-                <div class="doctor-tag">🤖 {st.session_state['doctor_name']}</div>
+                <div class="doctor-tag">{st.session_state['doctor_name']}</div>
                 <div class="doctor-status">● Online — AI Specialist</div>
             </div>
         </div>
@@ -229,6 +247,7 @@ with top_col3:
     if st.button("🔴 End Chat", use_container_width=True):
         st.session_state.pop("consultation_id", None)
         st.session_state.pop("doctor_name", None)
+        st.session_state.pop("doctor_photo", None)
         st.session_state.pop("messages", None)
         st.session_state.pop("prescription", None)
         st.switch_page("pages/1_dashboard.py")
@@ -240,8 +259,10 @@ if "prescription" in st.session_state:
 # =========================================================
 # CHAT HISTORY
 # =========================================================
+doctor_avatar = st.session_state.get("doctor_photo", "🤖")
+
 for msg in st.session_state["messages"]:
-    avatar = "🧑" if msg["role"] == "user" else "🤖"
+    avatar = "🧑" if msg["role"] == "user" else doctor_avatar
     with st.chat_message(msg["role"], avatar=avatar):
         if msg.get("image"):
             st.image(msg["image"], width=220)
